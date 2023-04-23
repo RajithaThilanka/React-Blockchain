@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Web3 from 'web3';
 import {Box ,Typography ,Stack,List,ListItem,ListItemText} from '@mui/material';
 import { TODO_LIST_ABI,TODO_LIST_ADDRESS} from '../config'
-import { TextField,Button } from '@mui/material';
+import { TextField,Button,ListItemSecondaryAction,Checkbox } from '@mui/material';
 
 import Grid from '@mui/material/Grid';
 
@@ -16,6 +16,32 @@ export default function TodoList() {
   const [todoList, setTodoList] = useState(null); 
   const [taskCount, setTaskCount] = useState(0);
   const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState();
+
+   
+const createTask = async (content) => {
+  try {
+    await todoList.methods.createTask(content).send({ from: address })
+      .on('transactionHash', () => {
+        console.log('New task created successfully');
+        loadBlockchainData();
+      });
+  } catch (error) {
+    console.log(error);
+   }
+ }
+  
+  const deleteTask = async (id) => { 
+    await todoList.methods.deleteTask(id).send({ from: address })
+    loadBlockchainData();
+  }
+
+
+    const handleAddTask = () => {
+      console.log(newTask);
+      createTask(newTask)
+      setNewTask('');
+  }
 
   async function loadBlockchainData() {
     const web3 = new Web3(Web3.givenProvider || "http://localhost:7545")  
@@ -46,21 +72,17 @@ export default function TodoList() {
             Blockchain Based To Do List 
           </Typography>
           <Stack direction="row" spacing={2} justifyContent={'right'}>
-            <Typography>
-              Network :
-            </Typography>
-            <Typography>
-              {net}
-            </Typography>
-          </Stack>
+          <Stack direction="column" spacing={2} justifyContent={'right'}>
+            <Typography> Network : </Typography>
+            <Typography> Account: </Typography>
+            
+            </Stack>
 
-          <Stack direction="row" spacing={2}>
-            <Typography>
-              Account :
-            </Typography>
-            <Typography>
-              {address }
-            </Typography>
+           <Stack direction="column" spacing={2} justifyContent={'right'}>
+            <Typography> {net} </Typography>
+            <Typography> {address } </Typography>
+    
+          </Stack>
           </Stack>
 
           <Stack direction="row" spacing={2}>
@@ -70,19 +92,25 @@ export default function TodoList() {
           </Stack>
           
           <Stack direction="row" spacing={2}>
-            <TextField
-              label="Add Task ... "
-            />
-            <Button variant="contained">Add</Button>
-          </Stack>
+           <TextField 
+             label="Add Task ..."
+             value={newTask}
+             onChange={(event) => setNewTask(event.target.value)}
+           />
 
+            <Button variant="contained" onClick={handleAddTask } >Add</Button>
+          </Stack>
           <List>
-            {tasks.map((task, index) => (
-              <ListItem key={index}>
-                <ListItemText primary={task.content} />
+               {tasks.map((task, id) => (
+               <ListItem key={id}>
+                       <ListItemText primary={`${id + 1}. ${task.content}`} />
+                       <ListItemSecondaryAction>
+                       <Checkbox onClick={() => deleteTask(id)} />
+                       </ListItemSecondaryAction>
               </ListItem>
-            ))}
+              ))}
           </List>
+
         </Stack>
       </Box>
     </div>
